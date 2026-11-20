@@ -3,6 +3,8 @@
 [Back to the README](../README.md). These are repository settings from
 [ADR-0004](adr/0004-own-the-repository-baseline.md). In the commands below,
 replace `OWNER/REPO` with Fabryka's current GitHub repository slug.
+For how these settings affect day-to-day contributions, see
+[contributor conventions](conventions.md).
 
 1. Create the PR triage labels:
 

@@ -24,9 +24,11 @@ Fabryka is a software factory for our team. Its goal is to make the way we build
 
 ## Use
 
-Start with [AGENTS.md](AGENTS.md) to contribute. Repository administrators
-can configure labels, the default-branch ruleset and private vulnerability
-reporting with the [repository setup guide](docs/new-repository.md).
+Start with the [contributor conventions](docs/conventions.md) for a tour of
+the repository and what it expects from contributors, or [AGENTS.md](AGENTS.md)
+for the canonical agent instructions. Repository administrators can configure
+labels, the default-branch ruleset and private vulnerability reporting with
+the [repository setup guide](docs/new-repository.md).
 
 ## How it works
 
