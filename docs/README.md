@@ -17,6 +17,7 @@ Docs are split by the question they answer:
 - [0002 — Agent-portable instruction surface](adr/0002-agent-portable-instruction-surface.md)
 - [0003 — Verify gate, risk paths and corrections (superseded)](adr/0003-verify-gate-risk-paths-and-corrections.md)
 - [0004 — Own the repository baseline](adr/0004-own-the-repository-baseline.md)
+- [0005 — Require Conventional Commits](adr/0005-require-conventional-commits.md)
 
 ### Guides
 

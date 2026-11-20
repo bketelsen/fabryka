@@ -1,8 +1,9 @@
 # Agent-ready repository
 
 Living document. Rationale: [ADR-0001](../adr/0001-record-architecture-decisions.md),
-[ADR-0002](../adr/0002-agent-portable-instruction-surface.md) and
-[ADR-0004](../adr/0004-own-the-repository-baseline.md).
+[ADR-0002](../adr/0002-agent-portable-instruction-surface.md),
+[ADR-0004](../adr/0004-own-the-repository-baseline.md) and
+[ADR-0005](../adr/0005-require-conventional-commits.md).
 Contract: [PR triage](../specs/pr-triage.md).
 
 ## Overview
@@ -21,6 +22,7 @@ Agents succeed when the repository answers their questions before they ask:
 - **Mandatory cross-linking.** ADRs link the designs they shape; designs link their ADRs, specs, and roadmap phase; specs link back. A doc without its links is defined as incomplete, so the graph stays navigable from any entry point.
 - **Live conventions only.** AGENTS.md's code-conventions section describes the code *as it is* — rules graduate in when the enforcing code lands. Agents following stale rules produce broken work; this structure makes stale rules a category error.
 - **Skills over improvisation.** Multi-step procedures that repeat become `.agents/skills/<name>/SKILL.md` files with a frontmatter description agents can select on. Explaining a procedure twice means it should become a skill.
+- **Consistent commit history.** Contributors and agents use Conventional Commits for authored commit messages. The rule lives in `AGENTS.md`, not in the CI gate.
 - **A verify gate protects the repository.** `make verify` checks the canonical surfaces, documentation index, risk paths, corrections inbox and root README. PR triage labels changes using repo-owned policy; the corrections inbox turns blocking reviews into guards.
 
 **Layout.** The repository foundation contains:
@@ -72,5 +74,5 @@ base has the corrections folder. Blocking reviews become targeted tests or
 
 ## References
 
-- Rationale: [ADR-0001](../adr/0001-record-architecture-decisions.md), [ADR-0002](../adr/0002-agent-portable-instruction-surface.md), [ADR-0004](../adr/0004-own-the-repository-baseline.md)
+- Rationale: [ADR-0001](../adr/0001-record-architecture-decisions.md), [ADR-0002](../adr/0002-agent-portable-instruction-surface.md), [ADR-0004](../adr/0004-own-the-repository-baseline.md), [ADR-0005](../adr/0005-require-conventional-commits.md)
 - Contract: [PR triage](../specs/pr-triage.md)

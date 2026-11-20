@@ -22,6 +22,13 @@ Start from .agents/skills/TEMPLATE/SKILL.md. -->
 
 ## Code conventions
 
+- Use [Conventional Commits](docs/adr/0005-require-conventional-commits.md)
+  for every commit message you author, including squash commits. Write
+  `type(scope): description` with an optional scope, e.g.
+  `docs(adr): require conventional commits`. Use `feat` for features and
+  `fix` for bug fixes. Mark breaking changes with `!` before the colon or a
+  `BREAKING CHANGE:` footer. Leave Git-generated merge messages and existing
+  history alone.
 - Run `make verify` before you call any change done. CI job `verify` runs
   `make ci`; with `BASE` set to the PR base it also checks corrections
   records: no record removed or renamed, only an empty `promoted_to`
