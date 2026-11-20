@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Read-only README checker: rules R1 to R12 of docs/specs/readme.md (ADR-0072).
+// Read-only README checker: repository rules R1 to R12 (ADR-0004).
 // It writes nothing. Every check reads the given text and the repository tree.
 //
 // Usage: node check-readme.mjs [--ref <ref>] [<dir>]

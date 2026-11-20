@@ -1,18 +1,7 @@
-// Risk paths and levels (ADR-0068, ADR-0078, docs/specs/risk-paths.md): strict
+// Risk paths and levels (ADR-0004, docs/specs/pr-triage.md): strict
 // parser, validator for list versions 1 and 2, glob matcher, the level of a
 // path and of a pull request, and a minimal GitHub API client. The labeling
-// step lives in scripts/lib/pr-triage.mjs.
-//
-// This module has no static imports. The reusable workflow
-// .github/workflows/pr-triage.yml embeds this file verbatim, writes it to a
-// file in the runner temp directory, and scripts/lib/pr-triage.mjs imports it
-// there, with no checkout. Edit this file, then run
-// `npm run sync:risk-paths-workflow`; `npm run check:risk-paths` fails when
-// the embedded copy drifts. Never edit the embedded copy by hand.
-//
-// Other repositories vendor this file and import validateRiskPaths,
-// matchGlob, parseStrictJson and matchFiles. Keep those names, their
-// signatures and their results for a version 1 list.
+// step lives in scripts/pr-triage.mjs.
 
 export const LIST_PATH = ".github/risk-paths.json";
 export const LABEL = "risk:high";
@@ -24,9 +13,8 @@ export const MAX_WHY_LENGTH = 200;
 export const LEVELS = Object.freeze(["L1", "L2", "L3", "L4"]);
 const LEVEL_LIST = LEVELS.join(", ");
 
-// The org floor: a path that matches the floor is at least this strict, whatever
-// a repository list says. A repository cannot change it.
-export const ORG_FLOORS = Object.freeze({
+// Repository-wide minimum review levels for sensitive paths.
+const REVIEW_FLOORS = Object.freeze({
   L1: Object.freeze({
     words: Object.freeze([
       "secret", "secrets", "credential", "credentials", "password", "passwords", "passwd",
@@ -425,21 +413,21 @@ const levelRank = (level) => LEVELS.indexOf(level);
 // The strictest of 2 levels; the first one wins a tie.
 const stricter = (a, b) => (levelRank(b) < levelRank(a) ? b : a);
 
-// The org floor of a path: { level, reason } or null.
+// The review floor of a path: { level, reason } or null.
 function floorOfPath(path) {
   const words = path.toLowerCase().split(/[/.\-_]/).filter((word) => word !== "");
-  const word = words.find((candidate) => ORG_FLOORS.L1.words.includes(candidate));
-  if (word !== undefined) return { level: "L1", reason: `org floor: path word ${JSON.stringify(word)}` };
+  const word = words.find((candidate) => REVIEW_FLOORS.L1.words.includes(candidate));
+  if (word !== undefined) return { level: "L1", reason: `review floor: path word ${JSON.stringify(word)}` };
   const last = path.split("/").pop();
   const dot = last.lastIndexOf(".");
   if (dot > 0) {
     const extension = last.slice(dot + 1).toLowerCase();
-    if (ORG_FLOORS.L1.extensions.includes(extension)) {
-      return { level: "L1", reason: `org floor: extension ${JSON.stringify(extension)}` };
+    if (REVIEW_FLOORS.L1.extensions.includes(extension)) {
+      return { level: "L1", reason: `review floor: extension ${JSON.stringify(extension)}` };
     }
   }
-  const glob = ORG_FLOORS.L2.globs.find((candidate) => matchGlob(candidate, path));
-  if (glob !== undefined) return { level: "L2", reason: `org floor: ${glob}` };
+  const glob = REVIEW_FLOORS.L2.globs.find((candidate) => matchGlob(candidate, path));
+  if (glob !== undefined) return { level: "L2", reason: `review floor: ${glob}` };
   return null;
 }
 
@@ -530,7 +518,7 @@ export function createGitHubApi({ token, apiUrl = "https://api.github.com", fetc
       Accept: accept,
       Authorization: `Bearer ${token}`,
       "X-GitHub-Api-Version": "2022-11-28",
-      "User-Agent": "frostyard-risk-paths",
+      "User-Agent": "fabryka-pr-triage",
     };
     if (body !== undefined) headers["Content-Type"] = "application/json";
     let response;

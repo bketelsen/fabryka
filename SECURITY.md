@@ -2,17 +2,12 @@
 
 ## Supported versions
 
-This template has no releases. Only the `main` branch gets fixes.
-
-A repository made from this template must replace this section with its own
-release policy.
+Fabryka has no releases yet. Only the default branch receives fixes.
 
 ## Reporting a vulnerability
 
-Use GitHub private vulnerability reporting:
-https://github.com/bketelsen/agentic-template/security
-
-Open the Security tab and click **Report a vulnerability**.
+In this repository's GitHub **Security** tab, choose **Report a vulnerability**
+to send a private report to the maintainers.
 
 Do not open a public issue with the details of a vulnerability. Do not post
 credentials in an issue, a pull request or a discussion.

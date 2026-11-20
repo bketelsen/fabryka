@@ -1,4 +1,4 @@
-# CI workflow (ADR-0021: SHA-pinned actions, least privilege): the job verify
+# CI workflow (ADR-0004: SHA-pinned actions, least privilege): the job verify
 # is the required check. Actions use full commit SHA pins, the token has only
 # contents read, and checkout does not persist credentials.
 name: CI
@@ -27,7 +27,7 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
-      # Node comes from mise.toml and mise.lock (ADR-0043), checksum-verified,
+      # Node comes from mise.toml and mise.lock, checksum-verified,
       # the same way a developer's `mise install` does.
       - uses: jdx/mise-action@b44d12e7d0d8ee7461bb893e1b1993500433185b # v5.2.7
         with:

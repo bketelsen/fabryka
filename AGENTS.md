@@ -1,11 +1,6 @@
-# Project Name
+# Fabryka
 
-<!-- One paragraph: what this project is and who it serves. Point at
-docs/README.md as the entry point for everything else. Keep this file under
-~200 lines — it is loaded into every agent session; long files dilute the
-rules that matter. -->
-
-One or two sentences describing the project. Start at
+Fabryka is a software factory for our team. Start at
 [docs/README.md](docs/README.md).
 
 This file (`AGENTS.md`) is the CANONICAL agent instructions — `CLAUDE.md`,
@@ -25,32 +20,19 @@ Start from .agents/skills/TEMPLATE/SKILL.md. -->
 
 - *(none yet — add the first one when a procedure repeats)*
 
-## Code conventions (live — the code exists)
+## Code conventions
 
-<!-- The most important section. Rules here must describe the code AS IT IS,
-not aspirations — an agent that follows a stale rule produces broken work.
-Graduate a rule into this list only when the code enforcing or exemplifying
-it has landed; until then it lives in a design doc as intent.
-
-Write rules imperatively and concretely, each with enough mechanism to be
-followed without asking ("Storage only via db.Open(slug, migrations)" — not
-"use the database layer"). Point at one canonical example in the code for
-every structural rule. Rules that remove a degree of freedom are the
-valuable ones: every choice an agent doesn't have to make is a failure mode
-removed. -->
-
-- *(add rules as the code that enforces them lands)*
 - Run `make verify` before you call any change done. CI job `verify` runs
-  `make ci`, which also checks the corrections records against the PR base: no
-  record removed or renamed, only an empty `promoted_to` filled, and the old
-  corrections file does not come back. Run `make ci BASE=origin/main` for the
-  same check locally.
+  `make ci`; with `BASE` set to the PR base it also checks corrections
+  records: no record removed or renamed, only an empty `promoted_to`
+  filled, and the old corrections file does not come back. Run
+  `make ci BASE=origin/main` for the same check locally.
 - A doc that says what a gate refuses names the command, the condition it
   runs under (for example `make ci BASE=<ref>`, not `make ci`) and each change
   the gate allows (for example a filled empty `promoted_to`), as the
   `Makefile`, the workflow and the gate's code define them.
-- `mise.toml` and `mise.lock` pin every tool the gate runs (ADR-0043 in core);
-  run `mise install` to get those versions. Change a pin only with `mise lock`,
+- `mise.toml` and `mise.lock` pin the gate's Node.js version;
+  run `mise install` to get it. Change a pin only with `mise lock`,
   in a commit of its own.
 
 **Test reliability.** No sleeps for timing (wait on a condition or inject a
@@ -69,25 +51,21 @@ and the review; `promoted_to`: the test or the rule). See `.memory/README.md`.
 every glob carries a level, and a PR that touches one gets that level label from
 `.github/workflows/risk-paths.yml` (`level:L1` read every line, `level:L2` read
 the diff, `level:L3` skim, `level:L4` title and CI), plus `risk:high` at L1 and
-L2, which declares tier 3. Core computes the level from the matched globs, the
-`default_level` and the org floors, and it never lowers a level label that the
-PR already has. The same caller removes `ready-for-human` when the head moves
-after the label. Add a path when you add a file of that kind (signing, auth,
-publish, secrets, destructive operations, CI), with a `why` that names its
-category. The gate requires schema version 2.
+L2, which declares tier 3. [PR triage](docs/specs/pr-triage.md) combines the
+matched globs, `default_level` and the repository review floors; it never
+lowers an existing level. It removes `ready-for-human` when the head moves or
+if the label is added before CI is green. Add a path for signing, auth,
+publishing, secrets, destructive operations or CI files, with a `why` that
+names its category. The gate requires schema version 2.
 
-**Vendored files.** `scripts/lib/risk-paths.mjs`,
-`scripts/lib/check-readme.mjs` and `scripts/check-corrections.mjs` are copies
-from frostyard/core; never edit them by hand (`make verify` checks their hashes).
-The template gate runs the README checker unchanged for root `README.md`
-([core README spec](https://github.com/frostyard/core/blob/main/docs/specs/readme.md),
-baseline B17, rules R1 to R12).
+**Local policy.** [ADR-0004](docs/adr/0004-own-the-repository-baseline.md)
+defines the baseline. Maintain the README, risk-path and corrections checks
+here and update their tests when behavior changes.
 
 ## Repository boundary
 
-<!-- What does NOT belong in this repo (secrets, personal data, generated
-files that are actually build outputs, apps that belong elsewhere)? How are
-releases cut? Delete the section if genuinely not applicable. -->
+Do not commit credentials or other secrets. Use private reporting for
+vulnerabilities (see [SECURITY.md](SECURITY.md)).
 
 ## Documentation rules (enforced)
 
@@ -95,10 +73,7 @@ Docs live in `docs/` in four categories. **Every new doc starts from its
 category's `TEMPLATE.md`** and follows its structure:
 
 - `docs/adr/` — why we decided. Immutable once Accepted; reversals are new
-  ADRs that mark the old one Superseded. This includes ADRs 0001 to 0003 that
-  come with the template: their `YYYY-MM-DD` date is a placeholder, not a
-  draft status. A new org-wide rule goes in a core ADR listed in
-  `docs/org-adrs.md`; a new project rule goes in a new ADR.
+  ADRs that mark the old one Superseded. Record new repository decisions here.
 - `docs/design/` — how it fits together. Living; updated in place to match
   reality.
 - `docs/specs/` — exact contracts. Change only alongside implementing code.

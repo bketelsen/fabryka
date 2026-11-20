@@ -1,7 +1,7 @@
 # 0003 — Verify gate, risk paths and corrections
 
-- **Status:** Accepted
-- **Date:** YYYY-MM-DD <!-- set when you adopt the template -->
+- **Status:** Superseded by [0004](0004-own-the-repository-baseline.md)
+- **Date:** 2026-11-20
 
 ## Context
 
@@ -19,7 +19,7 @@ and `make`; `make check` runs the verify gate; `make ci` runs verify and, with
 `BASE` set, the corrections append-only check.
 
 The repository stores a strict `.github/risk-paths.json` list and runs the
-pinned frostyard/core caller workflow. A matched pull request receives the
+pinned external caller workflow. A matched pull request receives the
 `risk:high` label. The list and caller are themselves high-risk paths.
 
 The repository stores durable corrections in `.memory/corrections.jsonl`.
@@ -27,8 +27,9 @@ A blocker-to-guard rule requires a targeted test or an `AGENTS.md` rule in the
 fixing pull request. The PR that fixes the blocker appends 1 corrections line.
 
 The repository copies the risk-path library and corrections checker from
-frostyard/core. `make verify` records and checks a SHA-256 pin for each copied
-file. A core update is a copy from the pinned core commit, not a manual edit.
+the upstream policy repository. `make verify` records and checks a SHA-256 pin
+for each copied file. An upstream update is a copy from the pinned commit, not
+a manual edit.
 
 ## Consequences
 
@@ -37,15 +38,15 @@ file. A core update is a copy from the pinned core commit, not a manual edit.
 - A repository made from this template needs 2 manual steps: create the
   `risk:high` label and add a branch ruleset that requires `verify`. The template
   does not copy rulesets or labels.
-- The vendored core files stay independent of project dependencies. Updates
-  require a copy from core and a hash-pin update.
+- The vendored files stay independent of project dependencies. Updates
+  require a copy from upstream and a hash-pin update.
 - A risk:high pull request declares tier 3 and waits for the repository's owner
   review policy.
 - A blocking review produces a guard and a durable correction record.
-- **Note, 2026-11-09:** the list is schema version 2 and the caller runs core's
+- **Note, 2026-11-09:** the list is schema version 2 and the caller runs the upstream
   `pr-triage.yml`, so a matched pull request gets 1 level label, `level:L1` to
-  `level:L4`, and `risk:high` only at L1 and L2 (core ADR-0068, ADR-0077 and
-  ADR-0078). The manual steps are now the 5 labels and the branch ruleset.
+  `level:L4`, and `risk:high` only at L1 and L2. The manual steps are now the
+  5 labels and the branch ruleset.
 
 ## Alternatives considered
 
@@ -55,15 +56,10 @@ file. A core update is a copy from the pinned core commit, not a manual edit.
   without an explicit high-risk path gate.
 - **Local corrections without append-only validation:** rejected because
   corrections could disappear or change without review.
-- **Copied and edited core implementation:** rejected because vendored files
+- **Copied and edited upstream implementation:** rejected because vendored files
   need byte-identical copies and verifiable updates.
 
 ## References
 
 - Builds on: [ADR-0001](0001-record-architecture-decisions.md), [ADR-0002](0002-agent-portable-instruction-surface.md)
 - Shapes: [`AGENTS.md`](../../AGENTS.md), [`Makefile`](../../Makefile), [`.github/risk-paths.json`](../../.github/risk-paths.json), [design: agent-ready repository](../design/agent-ready-repository.md)
-- Risk-path contract: [frostyard/core docs/specs/risk-paths.md](https://github.com/frostyard/core/blob/main/docs/specs/risk-paths.md)
-- Risk label rationale: [frostyard/core docs/adr/0068-label-pull-requests-that-touch-high-risk-paths.md](https://github.com/frostyard/core/blob/main/docs/adr/0068-label-pull-requests-that-touch-high-risk-paths.md)
-- Corrections surface rationale: [frostyard/core docs/adr/0018-org-wide-agent-instruction-and-knowledge-surfaces.md](https://github.com/frostyard/core/blob/main/docs/adr/0018-org-wide-agent-instruction-and-knowledge-surfaces.md)
-- Verify triad rationale: [frostyard/core docs/adr/0044-expose-the-make-gate-triad-in-every-repository.md](https://github.com/frostyard/core/blob/main/docs/adr/0044-expose-the-make-gate-triad-in-every-repository.md)
-- Amended in part by: [core ADR-0081](https://github.com/frostyard/core/blob/main/docs/adr/0081-store-each-correction-in-a-file-of-its-own.md)
