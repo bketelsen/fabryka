@@ -51,7 +51,7 @@ test("every ADR that a design doc links links the design doc back", (t) => {
 });
 
 test("a design doc whose ADR has no back-link is reported", () => {
-  const root = mkdtempSync(join(tmpdir(), "agentic-template-backlinks-"));
+  const root = mkdtempSync(join(tmpdir(), "fabryka-backlinks-"));
   temporary.push(root);
   mkdirSync(join(root, "docs", "design"), { recursive: true });
   mkdirSync(join(root, "docs", "adr"), { recursive: true });
@@ -63,7 +63,7 @@ test("a design doc whose ADR has no back-link is reported", () => {
 });
 
 test("the design TEMPLATE.md is not checked", () => {
-  const root = mkdtempSync(join(tmpdir(), "agentic-template-backlinks-"));
+  const root = mkdtempSync(join(tmpdir(), "fabryka-backlinks-"));
   temporary.push(root);
   mkdirSync(join(root, "docs", "design"), { recursive: true });
   writeFileSync(join(root, "docs", "design", "TEMPLATE.md"), "[ADR-NNNN](../adr/NNNN-x.md)\n", "utf8");
@@ -83,7 +83,7 @@ test("only a complete link to the exact design path counts as a back-link", () =
 });
 
 test("an ADR with only a longer or an incomplete design link is reported", () => {
-  const root = mkdtempSync(join(tmpdir(), "agentic-template-backlinks-"));
+  const root = mkdtempSync(join(tmpdir(), "fabryka-backlinks-"));
   temporary.push(root);
   mkdirSync(join(root, "docs", "design"), { recursive: true });
   mkdirSync(join(root, "docs", "adr"), { recursive: true });

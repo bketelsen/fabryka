@@ -1,4 +1,4 @@
-# Documentation
+# Fabryka documentation
 
 Docs are split by the question they answer:
 
@@ -15,15 +15,12 @@ Docs are split by the question they answer:
 
 - [0001 — Record architecture decisions](adr/0001-record-architecture-decisions.md)
 - [0002 — Agent-portable instruction surface](adr/0002-agent-portable-instruction-surface.md)
-- [0003 — Verify gate, risk paths and corrections](adr/0003-verify-gate-risk-paths-and-corrections.md)
-
-### Org-wide decisions
-
-- [Org-wide decisions (frostyard/core ADRs)](org-adrs.md)
+- [0003 — Verify gate, risk paths and corrections (superseded)](adr/0003-verify-gate-risk-paths-and-corrections.md)
+- [0004 — Own the repository baseline](adr/0004-own-the-repository-baseline.md)
 
 ### Guides
 
-- [After you create a repository from this template](new-repository.md)
+- [Configure Fabryka on GitHub](new-repository.md)
 
 ### Design
 
@@ -31,7 +28,7 @@ Docs are split by the question they answer:
 
 ### Specs
 
-*(none yet)*
+- [PR triage](specs/pr-triage.md)
 
 ### Plans
 

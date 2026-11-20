@@ -1,0 +1,31 @@
+name: Apply repository triage policy
+
+on:
+  workflow_call: {}
+
+permissions: {}
+
+jobs:
+  triage:
+    if: github.event_name == 'pull_request_target'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      checks: read
+      statuses: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # For pull_request_target, github.sha is the trusted base commit.
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: jdx/mise-action@b44d12e7d0d8ee7461bb893e1b1993500433185b # v5.2.7
+        with:
+          install: true
+          install_args: node
+          cache: false
+      - run: node scripts/pr-triage.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}

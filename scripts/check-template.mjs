@@ -1,21 +1,14 @@
 #!/usr/bin/env node
-// Template gate (ADR-0003), run by `make verify`. Checks:
+// Repository gate (ADR-0004), run by `make verify`. Checks:
 //   agent-symlinks  CLAUDE.md, GEMINI.md, .cursorrules and
 //                   .github/copilot-instructions.md resolve to AGENTS.md;
 //                   .claude/skills to .agents/skills (ADR-0002).
 //   docs-index      every doc under docs/ (not TEMPLATE.md) is linked from
 //                   docs/README.md, and every relative link there resolves.
-//   risk-paths      .github/risk-paths.json passes core's validator at schema
-//                   version 2 with a level in each entry, and rule C: the list
-//                   and the caller are listed, both at L1 or L2. The caller
-//                   runs frostyard/core's pr-triage.yml at a full commit SHA
-//                   in the job pr-triage (frostyard/core docs/specs/risk-paths.md).
-//   corrections     .memory/corrections/ passes core's record rules
-//                   (frostyard/core ADR-0018, ADR-0081), via
-//                   scripts/check-corrections.mjs.
-//   readme          root README.md passes core's B17 rules R1 to R12.
-//   vendored        the 3 files copied from frostyard/core match their sha256 pins.
-import { createHash } from "node:crypto";
+//   risk-paths      the version 2 list covers the triage files at L1 or L2
+//                   and the pr-triage job calls the local reusable workflow.
+//   corrections     .memory/corrections/ passes scripts/check-corrections.mjs.
+//   readme          root README.md passes the repository's rules R1 to R12.
 import { execFileSync } from "node:child_process";
 import {
   existsSync,
@@ -51,10 +44,6 @@ const counts = { docs: 0, links: 0, riskEntries: 0, corrections: "", readme: "" 
 
 function failCheck(name, file, problem) {
   failures.push({ name, file, problem });
-}
-
-function sha256(file) {
-  return createHash("sha256").update(readFileSync(file)).digest("hex");
 }
 
 // a. Canonical instruction and skill symlinks.
@@ -197,9 +186,10 @@ function checkDocsIndex() {
   }
 }
 
-// c. Strict risk-path list at schema version 2, the caller pin, and rule C.
+// c. Strict risk-path list at schema version 2 and a local triage workflow.
 const CALLER_PATH = ".github/workflows/risk-paths.yml";
-const CALLER_WORKFLOW = /^frostyard\/core\/\.github\/workflows\/pr-triage\.yml@[0-9a-f]{40}$/;
+const TRIAGE_WORKFLOW = ".github/workflows/pr-triage.yml";
+const TRIAGE_SCRIPT = "scripts/pr-triage.mjs";
 const CALLER_JOB = "pr-triage";
 
 // The lines of a workflow that are not part of a block scalar: a line under a
@@ -232,8 +222,7 @@ function usesValue(text) {
   return text.trim().replace(/^uses:[ \t]*/u, "").replace(/[ \t]+#.*$/u, "").trim();
 }
 
-// The caller file: core's reusable pr-triage workflow, as the `uses:` key at
-// indent 4 of the job pr-triage (frostyard/core docs/specs/risk-paths.md, rule E).
+// The local reusable workflow must be the `uses:` key at indent 4 of pr-triage.
 // A uses: line in another job, or the same text inside a run: block, is not the
 // caller and must not pass.
 function checkCaller(caller) {
@@ -274,15 +263,15 @@ function checkCaller(caller) {
     failCheck(
       "risk-paths",
       caller,
-      `the job ${CALLER_JOB} must set uses: at 4 spaces to frostyard/core/.github/workflows/pr-triage.yml at a full 40-character commit SHA; a uses: line in another job or in a run: block does not count`,
+      `the job ${CALLER_JOB} must set uses: at 4 spaces to ./${TRIAGE_WORKFLOW}; a uses: line in another job or in a run: block does not count`,
     );
     return;
   }
-  if (!CALLER_WORKFLOW.test(uses)) {
+  if (uses !== `./${TRIAGE_WORKFLOW}`) {
     failCheck(
       "risk-paths",
       caller,
-      `the uses: of the job ${CALLER_JOB} must be frostyard/core/.github/workflows/pr-triage.yml@<40-character commit SHA>, not ${JSON.stringify(uses)} (core ADR-0021)`,
+      `the uses: of the job ${CALLER_JOB} must be ./${TRIAGE_WORKFLOW}, not ${JSON.stringify(uses)}`,
     );
   }
 }
@@ -311,16 +300,18 @@ function checkRiskPaths() {
     return;
   }
 
-  // A repository made from this template starts on list version 2, so a
-  // version 1 list fails here. The validator accepts 1 and 2; for version 2 it
-  // already requires default_level and the level of each entry.
   if (list.schema_version !== 2) {
-    failCheck("risk-paths", relative, `schema_version: must be 2 in this template, not ${JSON.stringify(list.schema_version)}`);
+    failCheck("risk-paths", relative, `schema_version: must be 2, not ${JSON.stringify(list.schema_version)}`);
   }
 
   checkCaller(CALLER_PATH);
+  for (const file of [TRIAGE_WORKFLOW, TRIAGE_SCRIPT]) {
+    if (!existsSync(join(root, file)) || !statSync(join(root, file)).isFile()) {
+      failCheck("risk-paths", file, "local triage file does not exist");
+    }
+  }
   counts.riskEntries = list.paths.length;
-  for (const error of checkRequiredPaths(list, [relative, CALLER_PATH])) {
+  for (const error of checkRequiredPaths(list, [relative, CALLER_PATH, TRIAGE_WORKFLOW, TRIAGE_SCRIPT])) {
     failCheck("risk-paths", relative, error);
   }
 }
@@ -353,7 +344,7 @@ function checkCorrections() {
   }
 }
 
-// e. Run core's README checker unchanged: B17, docs/specs/readme.md (ADR-0072).
+// e. Run the repository's README checker.
 function checkReadme() {
   try {
     counts.readme = execFileSync(process.execPath, [join(scriptDir, "lib", "check-readme.mjs"), root], {
@@ -369,43 +360,11 @@ function checkReadme() {
   }
 }
 
-// f. Hash-pinned vendored core files. Update by copying core, never editing.
-function checkVendored() {
-  const vendored = [
-    {
-      path: "scripts/lib/check-readme.mjs",
-      source: "frostyard/core@b40d872d20084527849242a8bcc6b074cd5333a9:.agents/skills/frostyard-readme/scripts/check-readme.mjs",
-      sha256: "543c494db6aa638b9413f1ad8f02d0f47c353ee60b7a9fcfa91cfd2a177ef72f",
-    },
-    {
-      path: "scripts/lib/risk-paths.mjs",
-      source: "frostyard/core@c996ea3fb54bcf1a3c621113522213702a7673e2:scripts/lib/risk-paths.mjs",
-      sha256: "6df0af009ff385467214f8df56aa5c5c92ac19ad26689b3344bb4d2654cdfa43",
-    },
-    {
-      path: "scripts/check-corrections.mjs",
-      source: "frostyard/core@c8962829f1f34d900e0632e63f690f81630702f1:scripts/check-corrections.mjs",
-      sha256: "5c7a3a44a09d8c9d79efc919b42bb78b62b283616ffec16c211fe3e2b100008a",
-    },
-  ];
-  for (const item of vendored) {
-    const absolute = join(root, item.path);
-    if (!existsSync(absolute) || !statSync(absolute).isFile()) {
-      failCheck("vendored", item.path, `vendored from ${item.source}; copy it again from core and update the pin, never edit by hand`);
-      continue;
-    }
-    if (sha256(absolute) !== item.sha256) {
-      failCheck("vendored", item.path, `vendored from ${item.source}; copy it again from core and update the pin, never edit by hand`);
-    }
-  }
-}
-
 checkAgentSymlinks();
 checkDocsIndex();
 checkRiskPaths();
 checkCorrections();
 checkReadme();
-checkVendored();
 
 if (failures.length > 0) {
   for (const failure of failures) {
@@ -416,7 +375,6 @@ if (failures.length > 0) {
 
 console.log("ok   agent-symlinks: 5 symlinks resolve to AGENTS.md and .agents/skills");
 console.log(`ok   docs-index: ${counts.docs} docs indexed, ${counts.links} index links resolve`);
-console.log(`ok   risk-paths: ${counts.riskEntries} entries at schema version 2, list and caller listed`);
+console.log(`ok   risk-paths: ${counts.riskEntries} entries at schema version 2, local triage files covered`);
 console.log(`ok   corrections: ${counts.corrections}`);
 console.log(`ok   readme: ${counts.readme}`);
-console.log("ok   vendored: 3 pinned core copies match");

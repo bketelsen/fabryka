@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Corrections inbox gate (ADR-0018, ADR-0081): 1 file for each record in
+// Corrections inbox gate (ADR-0004): 1 file for each record in
 // .memory/corrections/, and the append-only .memory/corrections.jsonl during
 // the cut-over. A repository has 1 form or the other, never both. With
 // --base the tree at a ref is compared with the working tree, so a record is
@@ -184,7 +184,7 @@ function recordProblems(text) {
 }
 
 // The canonical bytes: exactly these 5 fields, in this order, 2-space indent,
-// 1 final newline (ADR-0081). Compared as bytes, never as a decoded string.
+// 1 final newline. Compared as bytes, never as a decoded string.
 function canonicalBytes(record) {
   const ordered = {};
   for (const key of REQUIRED) ordered[key] = record[key];

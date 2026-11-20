@@ -10,7 +10,7 @@
     {
       "glob": ".github/workflows/**",
       "level": "L2",
-      "why": "governance: CI, the risk-paths caller and token permissions"
+      "why": "governance: CI, PR triage workflows and token permissions"
     },
     {
       "glob": "Makefile",
@@ -20,7 +20,7 @@
     {
       "glob": "scripts/check-template.mjs",
       "level": "L2",
-      "why": "governance: the template verification gate"
+      "why": "governance: the repository verification gate"
     },
     {
       "glob": "scripts/check-corrections.mjs",
@@ -30,7 +30,12 @@
     {
       "glob": "scripts/lib/**",
       "level": "L2",
-      "why": "governance: the vendored risk-path validator and matcher, and README checker"
+      "why": "governance: the risk-path validator and matcher, and README checker"
+    },
+    {
+      "glob": "scripts/pr-triage.mjs",
+      "level": "L2",
+      "why": "governance: PR triage and readiness label changes"
     },
     {
       "glob": "mise.toml",

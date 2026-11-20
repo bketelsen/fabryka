@@ -17,7 +17,7 @@ import { fileURLToPath } from "node:url";
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const checker = join(repo, "scripts", "check-template.mjs");
-const coreSha = "c996ea3fb54bcf1a3c621113522213702a7673e2";
+const localWorkflow = "./.github/workflows/pr-triage.yml";
 const temporary = [];
 
 const validReadme = `<!-- readme-kind: org -->
@@ -64,14 +64,14 @@ after(() => {
 });
 
 function fixture() {
-  const root = mkdtempSync(join(tmpdir(), "agentic-template-l3-"));
+  const root = mkdtempSync(join(tmpdir(), "fabryka-verify-"));
   temporary.push(root);
   mkdirSync(join(root, ".agents", "skills"), { recursive: true });
   mkdirSync(join(root, ".claude"), { recursive: true });
   mkdirSync(join(root, ".github", "workflows"), { recursive: true });
   mkdirSync(join(root, "docs", "adr"), { recursive: true });
   mkdirSync(join(root, ".memory", "corrections"), { recursive: true });
-  mkdirSync(join(root, "scripts", "lib"), { recursive: true });
+  mkdirSync(join(root, "scripts"), { recursive: true });
 
   writeFileSync(join(root, "README.md"), validReadme, "utf8");
   writeFileSync(join(root, "SECURITY.md"), "# Security\n", "utf8");
@@ -91,8 +91,6 @@ function fixture() {
   writeFileSync(join(root, "docs", "adr", "0001-x.md"), "# One\n", "utf8");
   writeFileSync(join(root, "docs", "adr", "TEMPLATE.md"), "# Template\n", "utf8");
 
-  // A list of schema version 2 (the template requires it) and a caller of
-  // core's pr-triage workflow, as the template ships them.
   writeFileSync(
     join(root, ".github", "risk-paths.json"),
     JSON.stringify({
@@ -101,6 +99,7 @@ function fixture() {
       paths: [
         { glob: ".github/risk-paths.json", level: "L2", why: "governance: the high-risk path list" },
         { glob: ".github/workflows/**", level: "L2", why: "governance: CI and the caller workflow" },
+        { glob: "scripts/pr-triage.mjs", level: "L2", why: "governance: label changes" },
       ],
     }, null, 2) + "\n",
     "utf8",
@@ -116,7 +115,7 @@ function fixture() {
     "    permissions:",
     "      contents: read",
     "      pull-requests: write",
-    `    uses: frostyard/core/.github/workflows/pr-triage.yml@${coreSha} # frostyard/core main`,
+    `    uses: ${localWorkflow} # repo-local workflow`,
     "",
   ].join("\n"), "utf8");
 
@@ -132,9 +131,9 @@ function fixture() {
     "utf8",
   );
 
-  copyFileSync(join(repo, "scripts", "lib", "risk-paths.mjs"), join(root, "scripts", "lib", "risk-paths.mjs"));
-  copyFileSync(join(repo, "scripts", "check-corrections.mjs"), join(root, "scripts", "check-corrections.mjs"));
-  copyFileSync(join(repo, "scripts", "lib", "check-readme.mjs"), join(root, "scripts", "lib", "check-readme.mjs"));
+  for (const file of [localWorkflow, "scripts/pr-triage.mjs"]) {
+    copyFileSync(join(repo, file), join(root, file));
+  }
   return root;
 }
 
@@ -334,7 +333,7 @@ test("risk-path list of schema version 1 exits 1", (t) => {
       { glob: ".github/workflows/**", why: "governance: CI and the caller workflow" },
     ],
   }) + "\n", "utf8");
-  assertFailure(run(root), "schema_version: must be 2 in this template");
+  assertFailure(run(root), "schema_version: must be 2");
 });
 
 test("risk-path entry with no level exits 1", (t) => {
@@ -386,7 +385,7 @@ test("caller glob at level L3 exits 1", (t) => {
   assertFailure(run(root), "must be L1 or L2");
 });
 
-test("caller that still pins core's risk-paths workflow exits 1", (t) => {
+test("caller that pins an external triage workflow exits 1", (t) => {
   const root = fixture();
   t.after(() => rmSync(root, { recursive: true, force: true }));
   writeFileSync(join(root, ".github", "workflows", "risk-paths.yml"), [
@@ -396,10 +395,10 @@ test("caller that still pins core's risk-paths workflow exits 1", (t) => {
     "permissions: {}",
     "jobs:",
     "  pr-triage:",
-    `    uses: frostyard/core/.github/workflows/risk-paths.yml@${coreSha}`,
+    `    uses: example/policy/.github/workflows/pr-triage.yml@${"a".repeat(40)}`,
     "",
   ].join("\n"), "utf8");
-  assertFailure(run(root), "the uses: of the job pr-triage must be frostyard/core/.github/workflows/pr-triage.yml@");
+  assertFailure(run(root), "the uses: of the job pr-triage must be \\./\\.github/workflows/pr-triage\\.yml");
 });
 
 test("caller that renames the job exits 1", (t) => {
@@ -417,14 +416,14 @@ test("caller with comments at indent 0 and 2 before uses exits 0", (t) => {
   const text = readFileSync(caller, "utf8");
   const withComments = text.replace(
     "\n    uses: ",
-    "\n  # Keep the reusable workflow SHA-pinned.\n# core ADR-0021\n\n    uses: ",
+    "\n  # Keep the reusable workflow local.\n# ADR-0004\n\n    uses: ",
   );
   assert.notEqual(withComments, text);
   writeFileSync(caller, withComments, "utf8");
   assertClean(run(root));
 });
 
-test("caller with the pinned uses in another job exits 1", (t) => {
+test("caller with the local uses in another job exits 1", (t) => {
   const root = fixture();
   t.after(() => rmSync(root, { recursive: true, force: true }));
   writeFileSync(join(root, ".github", "workflows", "risk-paths.yml"), [
@@ -444,13 +443,13 @@ test("caller with the pinned uses in another job exits 1", (t) => {
     "    permissions:",
     "      contents: read",
     "      pull-requests: write",
-    `    uses: frostyard/core/.github/workflows/pr-triage.yml@${coreSha} # frostyard/core main`,
+    `    uses: ${localWorkflow}`,
     "",
   ].join("\n"), "utf8");
   assertFailure(run(root), "the job pr-triage must set uses: at 4 spaces");
 });
 
-test("caller with the pinned uses inside a run block exits 1", (t) => {
+test("caller with the local uses inside a run block exits 1", (t) => {
   const root = fixture();
   t.after(() => rmSync(root, { recursive: true, force: true }));
   writeFileSync(join(root, ".github", "workflows", "risk-paths.yml"), [
@@ -466,7 +465,7 @@ test("caller with the pinned uses inside a run block exits 1", (t) => {
     "      contents: read",
     "    steps:",
     "      - run: |",
-    `          uses: frostyard/core/.github/workflows/pr-triage.yml@${coreSha}`,
+    `          uses: ${localWorkflow}`,
     "",
   ].join("\n"), "utf8");
   assertFailure(run(root), "the job pr-triage must set uses: at 4 spaces");
@@ -572,7 +571,7 @@ test("corrections folder with only .gitkeep exits 0", (t) => {
   assertClean(run(root));
 });
 
-// Exercise the template entry point, not only the vendored checker's exports:
+// Exercise the repository entry point, not only the README checker's exports:
 // removing its invocation must make these negative tests fail.
 const readmeFailures = [
   ["R1", "missing marker", replaceReadme("<!-- readme-kind: org -->\n", "")],
@@ -660,18 +659,19 @@ test("README R10 requires the SECURITY.md location that exists", (t) => {
   assertClean(run(root));
 });
 
-test("changed vendored README checker exits 1", (t) => {
+test("missing local reusable workflow exits 1", (t) => {
   const root = fixture();
   t.after(() => rmSync(root, { recursive: true, force: true }));
-  const library = join(root, "scripts", "lib", "check-readme.mjs");
-  writeFileSync(library, readFileSync(library, "utf8") + " ", "utf8");
-  assertFailure(run(root), "FAIL vendored: scripts/lib/check-readme\\.mjs:");
+  unlinkSync(join(root, localWorkflow));
+  assertFailure(run(root), "pr-triage\\.yml: local triage file does not exist");
 });
 
-test("changed vendored risk-path library exits 1", (t) => {
+test("risk-path list with no triage script glob exits 1", (t) => {
   const root = fixture();
   t.after(() => rmSync(root, { recursive: true, force: true }));
-  const library = join(root, "scripts", "lib", "risk-paths.mjs");
-  writeFileSync(library, readFileSync(library, "utf8") + " ", "utf8");
-  assertFailure(run(root), "vendored");
+  const file = join(root, ".github", "risk-paths.json");
+  const list = JSON.parse(readFileSync(file, "utf8"));
+  list.paths = list.paths.filter(({ glob }) => glob !== "scripts/pr-triage.mjs");
+  writeFileSync(file, JSON.stringify(list));
+  assertFailure(run(root), "no glob matches the required path scripts/pr-triage\\.mjs");
 });

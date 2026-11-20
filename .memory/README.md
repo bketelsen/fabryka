@@ -1,9 +1,7 @@
 # `.memory/` — corrections inbox
 
-The single sanctioned inbox for durable learned corrections (core
-[ADR-0018](https://github.com/frostyard/core/blob/main/docs/adr/0018-org-wide-agent-instruction-and-knowledge-surfaces.md),
-and its form is set by core
-[ADR-0081](https://github.com/frostyard/core/blob/main/docs/adr/0081-store-each-correction-in-a-file-of-its-own.md)).
+Fabryka's inbox for durable corrections, governed by
+[ADR-0004](../docs/adr/0004-own-the-repository-baseline.md).
 
 ## Record files
 
@@ -32,7 +30,7 @@ each add a record add 2 different files, so they do not conflict.
     "date": "2026-11-13",
     "scope": "ci",
     "correction": "Pin the cache key to mise.lock.",
-    "evidence": "frostyard/pocket#412, cross-review of head 1a2b3c4",
+    "evidence": "PR #412, cross-review of head 1a2b3c4",
     "promoted_to": "test/cache-key.test.mjs"
   }
   ```
@@ -45,27 +43,16 @@ each add a record add 2 different files, so they do not conflict.
   [AGENTS.md](../AGENTS.md), a doc under [docs/](../docs/README.md), or a
   skill, set it to that path. Promotion is the only sanctioned duplication.
 - Never record credentials or non-public vulnerability details.
-- A blocking review point adds a record in the PR that fixes it (core
-  [quality loop](https://github.com/frostyard/core/blob/main/docs/design/quality-loop.md),
-  Learn station).
+- A blocking review point adds a record in the PR that fixes it, along with
+  a test or agent rule that guards against recurrence.
 
 This repository has 1 form: the folder. The old single file does not come
-back. Its records moved here as `legacy-` record files.
+back. Inherited records describe historical decisions and reviews; follow
+Fabryka's current ADRs and contributor instructions for active policy.
 
 ## Tools
 
 - `make verify` runs this repository's `scripts/check-corrections.mjs`, which
   checks the folder form. `make ci BASE=<ref>` adds `--base <ref>`: it also
   checks that no record is removed, renamed or changed except a filled empty
-  `promoted_to`.
-- Core's `new-correction.mjs` is an optional helper that writes 1 record file
-  in canonical form
-  ([source](https://github.com/frostyard/core/blob/main/scripts/new-correction.mjs)).
-  Run it from a copy outside this repository; it is not vendored here. A
-  file written by hand is checked the same way.
-- Core's `migrate-corrections.mjs`
-  ([source](https://github.com/frostyard/core/blob/main/scripts/migrate-corrections.mjs))
-  moves an old corrections file into the folder. An open PR that still adds
-  lines to the old file merges `main`, keeps its own version of the old file,
-  and runs it with `--pr <N>`: its new lines become `<date>-pr-<N>-<k>.json`
-  files.
+  `promoted_to`, and refuses the old single file if the base has the folder.
