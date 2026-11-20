@@ -21,6 +21,7 @@ Docs are split by the question they answer:
 
 ### Guides
 
+- [Contributor conventions](conventions.md)
 - [Configure Fabryka on GitHub](new-repository.md)
 
 ### Design

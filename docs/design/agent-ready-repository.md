@@ -11,6 +11,7 @@ Contract: [PR triage](../specs/pr-triage.md).
 Fabryka is a software factory for our team. Its repository foundation gives
 contributors and coding agents one place to find instructions, project
 decisions, repeatable checks and lessons from reviews.
+For a developer-facing walkthrough, see [contributor conventions](../conventions.md).
 
 ## Design
 
